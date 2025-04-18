@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String   @id
+  name      String
+  gstin     String
+  address   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+}
+
+model User {
+  id                   String               @id
+  username             String
+  password             String
+  name                 String
+  designation          String
+  mobileNumber         String
+  isAdmin              Boolean              @default(false)
+  organizationId       String
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  operations           Operation[]
+  transactionHistories TransactionHistory[]
+  organization         Organization         @relation(fields: [organizationId], references: [id])
+}
+
+model Product {
+  id               String             @id
+  name             String
+  description      String?
+  price            Float
+  sku              String
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  inventory        Inventory[]
+  operations       Operation[]
+  pendingInventory PendingInventory[]
+}
+
+model Category {
+  id          String   @id
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Inventory {
+  quantity  Int
+  productId String
+  rackId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  rack      Rack     @relation(fields: [rackId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@id([productId, rackId])
+}
+
+model Rack {
+  id               String             @id
+  number           String
+  description      String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  inventory        Inventory[]
+  operations       Operation[]
+  pendingInventory PendingInventory[]
+}
+
+model Operation {
+  id                   String               @id
+  type                 String
+  quantity             Int
+  productId            String
+  userId               String
+  rackId               String
+  isApproved           Boolean              @default(false)
+  isCancelled          Boolean              @default(false)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  rack                 Rack                 @relation(fields: [rackId], references: [id])
+  user                 User                 @relation(fields: [userId], references: [id])
+  product              Product              @relation(fields: [productId], references: [id])
+  pendingInventory     PendingInventory[]
+  transactionHistories TransactionHistory[]
+}
+
+model PendingInventory {
+  id          String    @id
+  quantity    Int
+  productId   String
+  rackId      String
+  operationId String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  operation   Operation @relation(fields: [operationId], references: [id])
+  rack        Rack      @relation(fields: [rackId], references: [id])
+  product     Product   @relation(fields: [productId], references: [id])
+}
+
+model TransactionHistory {
+  id          String    @id @default(cuid())
+  operationId String
+  userId      String
+  action      String
+  timestamp   DateTime  @default(now())
+  notes       String?
+  user        User      @relation(fields: [userId], references: [id])
+  operation   Operation @relation(fields: [operationId], references: [id])
+}

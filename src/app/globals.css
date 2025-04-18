@@ -1,26 +1,133 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1a1a;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --secondary: #f3f4f6;
+  --secondary-hover: #e5e7eb;
+  --border: #e2e8f0;
+  --input-background: #ffffff;
+  --error: #ef4444;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+[data-theme='dark'] {
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --secondary: #1e293b;
+  --secondary-hover: #334155;
+  --border: #334155;
+  --input-background: #1e293b;
+  --error: #f87171;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+html {
+  background-color: var(--background);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground min-h-screen;
+  }
+  
+  html {
+    @apply bg-background;
+  }
+}
+
+@layer components {
+  .input {
+    @apply w-full px-4 py-2 rounded-md bg-input-background border border-border text-foreground;
+  }
+
+  .input:focus {
+    @apply outline-none ring-2 ring-primary;
+  }
+
+  .button-primary {
+    @apply px-4 py-2 rounded-md font-medium transition-colors bg-primary text-white;
+  }
+
+  .button-primary:hover {
+    @apply bg-primary-hover;
+  }
+
+  .button-secondary {
+    @apply px-4 py-2 rounded-md font-medium transition-colors bg-secondary text-foreground;
+  }
+
+  .button-secondary:hover {
+    @apply bg-secondary-hover;
+  }
+
+  .error-message {
+    @apply text-sm mt-1 text-error;
+  }
+
+  .card {
+    @apply p-6 rounded-lg shadow-md bg-background border border-border;
+  }
+
+  .form-container {
+    @apply max-w-md mx-auto p-6;
+  }
+
+  .nav-link {
+    @apply px-4 py-2 rounded-md transition-colors text-foreground;
+  }
+
+  .nav-link:hover {
+    @apply bg-secondary;
+  }
+
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .page-title {
+    @apply text-2xl font-bold mb-6 text-foreground;
+  }
+
+  .table-container {
+    @apply overflow-x-auto;
+  }
+
+  .table {
+    @apply min-w-full divide-y divide-gray-200 dark:divide-gray-700;
+  }
+
+  .table th {
+    @apply px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-foreground bg-secondary;
+  }
+
+  .table td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-foreground;
+  }
+
+  .table tr {
+    @apply hover:bg-gray-50 dark:hover:bg-[#1a2847];
+  }
+
+  .alert {
+    @apply p-4 rounded-md mb-4 bg-secondary text-foreground;
+  }
+
+  .alert-success {
+    @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
+  }
+
+  .alert-error {
+    @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
+  }
 }
