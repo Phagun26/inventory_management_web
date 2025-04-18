@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       if (!product) {
         console.log('Creating new product:', productId)
         // Create a more descriptive name for the product
-        const productName = `Product ${productId}`
+        const productName = `${productId}`
         product = await prisma.product.create({
           data: {
             id: productId,
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       if (!rack) {
         console.log('Creating new rack:', rackId)
         // Create a more descriptive rack number
-        const rackNumber = `Rack ${rackId}`
+        const rackNumber = `${rackId}`
         rack = await prisma.rack.create({
           data: {
             id: rackId,

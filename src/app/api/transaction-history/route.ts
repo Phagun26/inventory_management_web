@@ -1,9 +1,46 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { NextRequest } from 'next/server'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const searchParams = request.nextUrl.searchParams
+    const productId = searchParams.get('productId')
+    const rackNumber = searchParams.get('rackNumber')
+    const operationType = searchParams.get('operationType')
+    const startDate = searchParams.get('startDate')
+    const endDate = searchParams.get('endDate')
+
     const history = await prisma.transactionHistory.findMany({
+      where: {
+        operation: {
+          AND: [
+            productId ? {
+              productId: {
+                contains: productId,
+                mode: 'insensitive'
+              }
+            } : {},
+            rackNumber ? {
+              rack: {
+                number: {
+                  contains: rackNumber,
+                  mode: 'insensitive'
+                }
+              }
+            } : {},
+            operationType ? {
+              type: operationType
+            } : {},
+            startDate && endDate ? {
+              createdAt: {
+                gte: new Date(`${startDate}T00:00:00.000Z`),
+                lte: new Date(`${endDate}T23:59:59.999Z`)
+              }
+            } : {}
+          ]
+        }
+      },
       include: {
         user: {
           select: {
