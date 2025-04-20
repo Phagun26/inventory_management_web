@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Cookies from 'js-cookie'
 
 interface User {
   id: string
@@ -23,24 +22,19 @@ export default function UsersPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const userStr = Cookies.get('user')
+    const userStr = localStorage.getItem('user')
     if (!userStr) {
       router.push('/login')
       return
     }
 
-    try {
-      const user = JSON.parse(userStr)
-      if (!user.isAdmin) {
-        router.push('/unauthorized')
-        return
-      }
-      fetchUsers()
-    } catch (error) {
-      console.error('Error parsing user data:', error)
-      Cookies.remove('user')
-      router.push('/login')
+    const user = JSON.parse(userStr)
+    if (!user.isAdmin) {
+      router.push('/inventory')
+      return
     }
+
+    fetchUsers()
   }, [router])
 
   const fetchUsers = async () => {
@@ -49,10 +43,6 @@ export default function UsersPage() {
       if (response.ok) {
         const data = await response.json()
         setUsers(data)
-      } else if (response.status === 401) {
-        router.push('/login')
-      } else if (response.status === 403) {
-        router.push('/unauthorized')
       }
     } catch (error) {
       console.error('Error fetching users:', error)
@@ -80,10 +70,6 @@ export default function UsersPage() {
       if (response.ok) {
         await fetchUsers()
         setEditingUser(null)
-      } else if (response.status === 401) {
-        router.push('/login')
-      } else if (response.status === 403) {
-        router.push('/unauthorized')
       }
     } catch (error) {
       console.error('Error updating user:', error)

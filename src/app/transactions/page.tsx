@@ -36,11 +36,35 @@ export default function TransactionsPage() {
   const productInputRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
-    // Load history from localStorage
-    const savedRackHistory = localStorage.getItem('rackHistory')
-    const savedItemHistory = localStorage.getItem('itemHistory')
-    if (savedRackHistory) setRackHistory(JSON.parse(savedRackHistory))
-    if (savedItemHistory) setItemHistory(JSON.parse(savedItemHistory))
+    // Fetch history from database
+    const fetchHistory = async () => {
+      try {
+        const response = await fetch('/api/transaction-history')
+        if (response.ok) {
+          const data = await response.json()
+          // Extract unique product IDs and rack numbers
+          const uniqueProducts = new Set<string>()
+          const uniqueRacks = new Set<string>()
+          
+          data.forEach((item: any) => {
+            if (item.operation.productId) {
+              uniqueProducts.add(item.operation.productId)
+            }
+            if (item.operation.rack?.number) {
+              uniqueRacks.add(item.operation.rack.number)
+            }
+          })
+
+          // Update state with unique values
+          setItemHistory([...uniqueProducts].map(id => ({ id: Date.now().toString(), type: 'item' as const, value: id })))
+          setRackHistory([...uniqueRacks].map(number => ({ id: Date.now().toString(), type: 'rack' as const, value: number })))
+        }
+      } catch (error) {
+        console.error('Error fetching history:', error)
+      }
+    }
+
+    fetchHistory()
   }, [])
 
   useEffect(() => {
@@ -61,7 +85,7 @@ export default function TransactionsPage() {
     } else {
       setRackProducts([])
     }
-  }, [operationType, rackNumber])
+  }, [operationType, rackNumber, focusedProductIndex])
 
   const handleProductSuggestionClick = (index: number, value: string) => {
     handleProductChange(index, 'id', value)
@@ -130,7 +154,16 @@ export default function TransactionsPage() {
   }
 
   const addProductRow = () => {
+    const newIndex = products.length
     setProducts([...products, { id: '', quantity: '' }])
+    // Set focus to the new row's product ID input
+    setTimeout(() => {
+      setFocusedProductIndex(newIndex)
+      const newInput = productInputRefs.current[newIndex]?.querySelector('input')
+      if (newInput) {
+        newInput.focus()
+      }
+    }, 0)
   }
 
   const removeProductRow = (index: number) => {
@@ -172,17 +205,27 @@ export default function TransactionsPage() {
       if (rackNumber && !rackHistory.some(rack => rack.value === rackNumber)) {
         const newRackHistory = [...rackHistory, { id: Date.now().toString(), type: 'rack' as const, value: rackNumber }]
         setRackHistory(newRackHistory)
-        localStorage.setItem('rackHistory', JSON.stringify(newRackHistory))
+        // Update history in database
+        await fetch('/api/history/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'rack', value: rackNumber })
+        })
       }
 
       // Add product IDs to history
-      products.forEach(product => {
+      for (const product of products) {
         if (product.id && !itemHistory.some(item => item.value === product.id)) {
           const newItemHistory = [...itemHistory, { id: Date.now().toString(), type: 'item' as const, value: product.id }]
           setItemHistory(newItemHistory)
-          localStorage.setItem('itemHistory', JSON.stringify(newItemHistory))
+          // Update history in database
+          await fetch('/api/history/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'item', value: product.id })
+          })
         }
-      })
+      }
 
       // Clear form
       setRackNumber('')

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { format } from 'date-fns'
 
 interface InventoryItem {
   id: string
@@ -16,7 +17,10 @@ export default function InventoryPage() {
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [pendingCount, setPendingCount] = useState(0)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [productIdFilter, setProductIdFilter] = useState('')
+  const [rackNumberFilter, setRackNumberFilter] = useState('')
+  const [showExportDialog, setShowExportDialog] = useState(false)
+  const [exportFileName, setExportFileName] = useState(`Inventory_${format(new Date(), 'yyyy-MM-dd')}`)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,20 +50,54 @@ export default function InventoryPage() {
     fetchData()
   }, [])
 
-  // Filter items based on search term
+  // Filter items based on both filters
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredItems(inventoryItems)
-      return
+    let filtered = [...inventoryItems]
+    
+    if (productIdFilter.trim()) {
+      const lowerProductId = productIdFilter.toLowerCase()
+      filtered = filtered.filter(item => 
+        item.id.toLowerCase().includes(lowerProductId)
+      )
     }
     
-    const lowerSearchTerm = searchTerm.toLowerCase()
-    const filtered = inventoryItems.filter(item => 
-      item.id.toLowerCase().includes(lowerSearchTerm) || 
-      item.rackNumber.toLowerCase().includes(lowerSearchTerm)
-    )
+    if (rackNumberFilter.trim()) {
+      const lowerRackNumber = rackNumberFilter.toLowerCase()
+      filtered = filtered.filter(item => 
+        item.rackNumber.toLowerCase().includes(lowerRackNumber)
+      )
+    }
+    
     setFilteredItems(filtered)
-  }, [searchTerm, inventoryItems])
+  }, [productIdFilter, rackNumberFilter, inventoryItems])
+
+  const handleExport = () => {
+    // Create CSV content
+    const headers = ['ID', 'Name', 'Quantity', 'Rack Number']
+    const csvContent = [
+      headers.join(','),
+      ...filteredItems.map(item => [
+        item.id,
+        item.name,
+        item.quantity,
+        item.rackNumber
+      ].join(','))
+    ].join('\n')
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `${exportFileName}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+    setShowExportDialog(false)
+  }
 
   return (
     <div className="min-h-screen p-8 bg-background">
@@ -80,23 +118,29 @@ export default function InventoryPage() {
       <div className="bg-white dark:bg-[#1e293b] p-6 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold dark:text-gray-200">Inventory Items</h2>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search by product ID or rack number..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-4 py-2 pr-10 border border-gray-300 dark:border-[#334155] rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:bg-[#0f172a] dark:text-gray-200"
-            />
-            <svg 
-              className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
+          <button
+            onClick={() => setShowExportDialog(true)}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Export to CSV
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <input
+            type="text"
+            placeholder="Search by Product ID"
+            value={productIdFilter}
+            onChange={(e) => setProductIdFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 dark:border-[#334155] rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:bg-[#0f172a] dark:text-gray-200"
+          />
+          <input
+            type="text"
+            placeholder="Search by Rack Number"
+            value={rackNumberFilter}
+            onChange={(e) => setRackNumberFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 dark:border-[#334155] rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:bg-[#0f172a] dark:text-gray-200"
+          />
         </div>
         
         {isLoading ? (
@@ -152,6 +196,35 @@ export default function InventoryPage() {
           </div>
         )}
       </div>
+
+      {/* Export Dialog */}
+      {showExportDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-96">
+            <h3 className="text-lg font-medium mb-4 dark:text-gray-200">Export Inventory</h3>
+            <input
+              type="text"
+              value={exportFileName}
+              onChange={(e) => setExportFileName(e.target.value)}
+              className="w-full px-4 py-2 mb-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-200"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowExportDialog(false)}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleExport}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Export
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating Action Button */}
       <button

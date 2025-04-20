@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 
 const prisma = new PrismaClient()
 
@@ -9,7 +10,7 @@ export async function POST(request: Request) {
     const { username, password, name, designation, mobileNumber, organizationId } = await request.json()
 
     // Check if username already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.user.findFirst({
       where: { username }
     })
 
@@ -23,13 +24,18 @@ export async function POST(request: Request) {
     // Create the user with the selected organization
     const user = await prisma.user.create({
       data: {
+        id: crypto.randomUUID(),
         username,
         password: hashedPassword,
         name,
         designation,
         mobileNumber,
         isAdmin: false,
-        organizationId: organizationId.toString()
+        organization: {
+          connect: {
+            id: organizationId.toString()
+          }
+        }
       }
     })
 

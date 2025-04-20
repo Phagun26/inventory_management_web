@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     }
 
     if (type === 'rack') {
-      const rack = await prisma.rack.findUnique({
+      const rack = await prisma.rack.findFirst({
         where: {
           number: query
         },

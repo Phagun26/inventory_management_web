@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import UserDropdown from './UserDropdown'
-import Cookies from 'js-cookie'
 
 interface User {
   name: string
@@ -16,22 +15,15 @@ export default function Navbar() {
   const [pendingCount, setPendingCount] = useState(0)
   const [user, setUser] = useState<User | null>(null)
   const pathname = usePathname()
-  const router = useRouter()
 
   useEffect(() => {
-    // Get user from cookies
-    const userStr = Cookies.get('user')
+    // Get user from localStorage
+    const userStr = localStorage.getItem('user')
     if (userStr) {
-      try {
-        const userData = JSON.parse(userStr)
-        setUser(userData)
-      } catch (error) {
-        console.error('Error parsing user data:', error)
-        Cookies.remove('user')
-        router.push('/login')
-      }
+      const userData = JSON.parse(userStr)
+      setUser(userData)
     }
-  }, [router])
+  }, [])
 
   useEffect(() => {
     // Only fetch pending count if user is admin
@@ -54,12 +46,6 @@ export default function Navbar() {
       return () => clearInterval(interval)
     }
   }, [user])
-
-  // Hide admin links if user is not admin
-  if (!user?.isAdmin && (pathname === '/admin' || pathname === '/users')) {
-    router.push('/unauthorized')
-    return null
-  }
 
   return (
     <nav className="bg-white dark:bg-[#0f172a] shadow-lg">

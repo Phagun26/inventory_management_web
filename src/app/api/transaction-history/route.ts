@@ -17,15 +17,13 @@ export async function GET(request: NextRequest) {
           AND: [
             productId ? {
               productId: {
-                contains: productId,
-                mode: 'insensitive'
+                equals: productId
               }
             } : {},
             rackNumber ? {
               rack: {
                 number: {
-                  contains: rackNumber,
-                  mode: 'insensitive'
+                  equals: rackNumber
                 }
               }
             } : {},
