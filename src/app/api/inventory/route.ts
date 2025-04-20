@@ -1,15 +1,12 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import type { PrismaClient } from '@prisma/client'
 
-type InventoryItem = Awaited<ReturnType<PrismaClient['inventory']['findMany']>>[number] & {
-  product: { id: string; name: string }
-  rack: { number: string }
-}
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET() {
   try {
-    const inventoryItems = await prisma.inventory.findMany({
+    const inventory = await prisma.inventory.findMany({
       include: {
         product: {
           select: {
@@ -19,23 +16,18 @@ export async function GET() {
         },
         rack: {
           select: {
-            number: true
+            id: true,
+            number: true,
+            description: true
           }
         }
+      },
+      orderBy: {
+        updatedAt: 'desc',
       }
-    }) as InventoryItem[]
+    })
 
-    console.log('Raw inventory data:', inventoryItems)
-
-    // Transform the data to match the expected format
-    const formattedItems = inventoryItems.map(item => ({
-      id: item.product.id,
-      name: item.product.name,
-      quantity: item.quantity,
-      rackNumber: item.rack.number
-    }))
-
-    return NextResponse.json(formattedItems)
+    return NextResponse.json(inventory)
   } catch (error) {
     console.error('Error fetching inventory:', error)
     return NextResponse.json(

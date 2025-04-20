@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useTheme } from '@/components/ThemeProvider'
 
 interface Organization {
-  id: number
+  id: string
   name: string
 }
 
@@ -19,7 +19,7 @@ export default function Signup() {
     name: '',
     designation: '',
     mobileNumber: '',
-    organizationId: '' as string | number
+    organizationId: ''
   })
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [error, setError] = useState('')
@@ -179,13 +179,7 @@ export default function Signup() {
                 required
                 className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white text-sm"
                 value={formData.organizationId}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setFormData({ 
-                    ...formData, 
-                    organizationId: value === '' ? '' : Number(value) 
-                  });
-                }}
+                onChange={(e) => setFormData({ ...formData, organizationId: e.target.value })}
               >
                 <option value="">Select Organization</option>
                 {organizations.map((org) => (

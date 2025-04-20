@@ -7,126 +7,123 @@ export async function POST(request: Request) {
     const { type, quantity, productId, userId, rackId } = await request.json()
     console.log('Creating new operation:', { type, quantity, productId, userId, rackId })
 
-    // Generate a unique operation ID using timestamp and random bytes
+    // Generate unique IDs
     const uniqueId = `op-${Date.now()}-${randomBytes(4).toString('hex')}`
     const pendingInventoryId = `pi-${Date.now()}-${randomBytes(4).toString('hex')}`
 
-    // For INWARD operations, create product and rack if they don't exist
-    if (type === 'INWARD') {
-      // Check and create product if it doesn't exist
-      let product = await prisma.product.findUnique({
-        where: { id: productId }
+    // Use a transaction to ensure all operations are atomic
+    const result = await prisma.$transaction(async (tx) => {
+      // Validate user first
+      const user = await tx.user.findUnique({
+        where: { id: userId.toString() }
       })
-      
-      if (!product) {
-        console.log('Creating new product:', productId)
-        // Create a more descriptive name for the product
-        const productName = `${productId}`
-        product = await prisma.product.create({
-          data: {
-            id: productId,
-            name: productName,
-            sku: productId,
-            price: 0, // Default price
-            description: `Auto-created product with ID: ${productId}` // More descriptive
-          }
+      if (!user) {
+        throw new Error('User not found')
+      }
+
+      // For INWARD operations, handle product and rack creation
+      if (type === 'INWARD') {
+        // Check and create product if it doesn't exist
+        let product = await tx.product.findUnique({
+          where: { id: productId }
         })
-      }
+        
+        if (!product) {
+          console.log('Creating new product:', productId)
+          product = await tx.product.create({
+            data: {
+              id: productId,
+              name: productId,
+              sku: productId,
+              price: 0,
+              description: `Auto-created product with ID: ${productId}`
+            }
+          })
+        }
 
-      // Check and create rack if it doesn't exist
-      let rack = await prisma.rack.findUnique({
-        where: { id: rackId }
-      })
-
-      if (!rack) {
-        console.log('Creating new rack:', rackId)
-        // Create a more descriptive rack number
-        const rackNumber = `${rackId}`
-        rack = await prisma.rack.create({
-          data: {
-            id: rackId,
-            number: rackNumber,
-            description: `Auto-created rack with ID: ${rackId}`
-          }
+        // Check if rack exists first
+        let rack = await tx.rack.findUnique({
+          where: { id: rackId }
         })
-      }
-    } else {
-      // For OUTWARD, validate existing product and rack
-      const product = await prisma.product.findUnique({
-        where: { id: productId }
-      })
-      if (!product) {
-        console.log('Product not found:', productId)
-        return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+
+        if (!rack) {
+          console.log('Creating new rack:', rackId)
+          try {
+            rack = await tx.rack.create({
+              data: {
+                id: rackId,
+                number: rackId,
+                description: `Auto-created rack with ID: ${rackId}`
+              }
+            })
+          } catch (error) {
+            // If rack creation fails, check if it was created concurrently
+            rack = await tx.rack.findUnique({
+              where: { id: rackId }
+            })
+            if (!rack) {
+              throw new Error('Failed to create rack')
+            }
+          }
+        }
+      } else {
+        // For OUTWARD operations
+        const [product, rack, inventory] = await Promise.all([
+          tx.product.findUnique({ where: { id: productId } }),
+          tx.rack.findUnique({ where: { id: rackId } }),
+          tx.inventory.findFirst({
+            where: {
+              productId,
+              rackId
+            }
+          })
+        ])
+
+        if (!product) throw new Error('Product not found')
+        if (!rack) throw new Error('Rack not found')
+        if (!inventory || inventory.quantity < quantity) {
+          throw new Error('Insufficient quantity in inventory')
+        }
       }
 
-      const rack = await prisma.rack.findUnique({
-        where: { id: rackId }
-      })
-      if (!rack) {
-        console.log('Rack not found:', rackId)
-        return NextResponse.json({ error: 'Rack not found' }, { status: 404 })
-      }
-    }
-
-    // Validate if user exists
-    const user = await prisma.user.findUnique({
-      where: { id: userId.toString() }
-    })
-    if (!user) {
-      console.log('User not found:', userId)
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
-    // Validate quantity for outward operations
-    if (type === 'OUTWARD') {
-      const inventory = await prisma.inventory.findFirst({
-        where: {
+      // Create the operation
+      const operation = await tx.operation.create({
+        data: {
+          id: uniqueId,
+          type,
+          quantity,
           productId,
-          rackId
+          userId: userId.toString(),
+          rackId,
+          isApproved: false
+        },
+        include: {
+          product: true,
+          rack: true,
+          user: true
         }
       })
-      console.log('Current inventory for outward:', inventory)
 
-      if (!inventory || inventory.quantity < quantity) {
-        console.log('Insufficient quantity. Required:', quantity, 'Available:', inventory?.quantity)
-        return NextResponse.json({ error: 'Insufficient quantity in inventory' }, { status: 400 })
-      }
-    }
+      // Create pending inventory entry
+      const pendingInventory = await tx.pendingInventory.create({
+        data: {
+          id: pendingInventoryId,
+          quantity,
+          productId,
+          rackId,
+          operationId: operation.id
+        }
+      })
 
-    const operation = await prisma.operation.create({
-      data: {
-        id: uniqueId,
-        type,
-        quantity,
-        productId,
-        userId: userId.toString(),
-        rackId,
-        isApproved: false
-      } as any, // Type assertion to bypass TypeScript error
-      include: {
-        product: true,
-        rack: true,
-        user: true
-      }
+      return { operation, pendingInventory }
     })
 
-    // Create pending inventory entry
-    await (prisma as any).pendingInventory.create({
-      data: {
-        id: pendingInventoryId,
-        quantity,
-        productId,
-        rackId,
-        operationId: operation.id
-      }
-    })
-
-    console.log('Operation created successfully:', operation)
-    return NextResponse.json(operation)
+    console.log('Operation created successfully:', result.operation)
+    return NextResponse.json(result.operation)
   } catch (error) {
     console.error('Error creating operation:', error)
-    return NextResponse.json({ error: 'Failed to create operation' }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create operation'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }
 
