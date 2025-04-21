@@ -10,7 +10,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "seed": "ts-node src/lib/seed.ts"
+    "seed": "ts-node src/lib/seed.ts",
+     "postinstall": "prisma generate"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.2",
