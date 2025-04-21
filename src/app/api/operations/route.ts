@@ -2,9 +2,17 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { randomBytes } from 'crypto'
 
+interface OperationRequest {
+  type: 'INWARD' | 'OUTWARD'
+  quantity: number
+  productId: string
+  userId: string
+  rackId: string
+}
+
 export async function POST(request: Request) {
   try {
-    const { type, quantity, productId, userId, rackId } = await request.json()
+    const { type, quantity, productId, userId, rackId } = (await request.json()) as OperationRequest
     console.log('Creating new operation:', { type, quantity, productId, userId, rackId })
 
     // Generate unique IDs
@@ -15,7 +23,7 @@ export async function POST(request: Request) {
     const result = await prisma.$transaction(async (tx) => {
       // Validate user first
       const user = await tx.user.findUnique({
-        where: { id: userId.toString() }
+        where: { id: userId }
       })
       if (!user) {
         throw new Error('User not found')
@@ -93,7 +101,7 @@ export async function POST(request: Request) {
           type,
           quantity,
           productId,
-          userId: userId.toString(),
+          userId,
           rackId,
           isApproved: false
         },

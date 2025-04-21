@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { randomBytes } from 'crypto'
 
 export async function POST(request: Request) {
   try {
@@ -18,14 +19,19 @@ export async function POST(request: Request) {
     })
 
     if (!existingHistory) {
+      // Generate unique ID for operation
+      const uniqueId = `op-${Date.now()}-${randomBytes(4).toString('hex')}`
+
       // Create a new operation record
       const operation = await prisma.operation.create({
         data: {
+          id: uniqueId,
           type: 'INWARD', // Default type
           quantity: 0, // Default quantity
           productId: type === 'item' ? value : '', // Only set if it's an item
           rackId: type === 'rack' ? value : '', // Only set if it's a rack
-          userId: '1' // Default user ID
+          userId: '1', // Default user ID
+          isApproved: false // Default approval status
         }
       })
 
