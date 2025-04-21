@@ -12,12 +12,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Enable static exports
-  output: 'export',
-  // Disable image optimization for static export
-  images: {
-    unoptimized: true,
-  },
 }
 
 export default nextConfig 
