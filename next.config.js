@@ -6,9 +6,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    serverActions: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
