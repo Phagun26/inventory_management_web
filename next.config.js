@@ -5,6 +5,13 @@ const nextConfig = {
   output: 'standalone',
   images: {
     unoptimized: true,
+    domains: ['netlify.app'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
   typescript: {
     ignoreBuildErrors: true,
