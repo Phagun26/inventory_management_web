@@ -12,8 +12,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
     "seed": "ts-node src/lib/seed.ts",
-    "postinstall": "prisma generate --no-engine",
-    "netlify-postbuild": "cp next.config.cjs .netlify/functions-internal/next-config.cjs && cp netlify-odb-wrapper.cjs .netlify/functions-internal/netlify-odb-handler.cjs"
+    "postinstall": "prisma generate --no-engine"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.2",
