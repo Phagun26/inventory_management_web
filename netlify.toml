@@ -7,11 +7,13 @@
 
 [functions]
   node_bundler = "esbuild"
+  external_node_modules = ["@opentelemetry/api"]
 
 [build.environment]
   NODE_VERSION = "18"
   NEXT_FORCE_EDGE_IMAGES = "true"
   NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NEXT_TELEMETRY_DISABLED = "1"
 
 [[headers]]
   for = "/*"
