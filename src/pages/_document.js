@@ -5,8 +5,8 @@ class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
-          {/* Force CSS to be loaded */}
-          <link rel="stylesheet" href="/_next/static/css/app/layout.css" />
+          {/* Include the stylesheet with a relative path for static export */}
+          <link rel="stylesheet" href="/_next/static/css/styles.css" />
         </Head>
         <body>
           <Main />

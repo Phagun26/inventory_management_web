@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'standalone',
+  output: 'export',
   images: {
     unoptimized: true,
     domains: ['netlify.app'],
@@ -25,6 +25,12 @@ const nextConfig = {
   
   // Ensure CSS modules are handled properly
   webpack: (config) => {
+    // Add CSS handling
+    config.module.rules.push({
+      test: /\.css$/,
+      use: ['style-loader', 'css-loader', 'postcss-loader'],
+    });
+    
     return config;
   }
 }
