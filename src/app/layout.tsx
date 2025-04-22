@@ -10,9 +10,6 @@ export const metadata = {
   description: 'A modern inventory management system',
 }
 
-export const dynamic = 'force-static'
-export const revalidate = 3600 // Revalidate every hour
-
 export default function RootLayout({
   children,
 }: {
