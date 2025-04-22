@@ -1,9 +1,16 @@
 // This file uses CommonJS module format
 module.exports = {
   handler: async function(event, context) {
-    // This is a simple passthrough handler that avoids the ES module error
-    const { builder } = await import('@netlify/functions');
-    const { handler: origHandler } = await import('../../.next/server/app/api/auth/login/route.js');
-    return builder(origHandler)(event, context);
+    try {
+      // Import the Next.js handler as CommonJS
+      const { handler } = require('../../.next/server/edge-runtime-webpack');
+      return await handler(event, context);
+    } catch (error) {
+      console.error('Error in Netlify ODB handler:', error);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'Internal Server Error', details: error.message })
+      };
+    }
   }
 }; 
