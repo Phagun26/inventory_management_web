@@ -18,5 +18,6 @@ module.exports = {
   },
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs']
-  }
+  },
+  target: 'serverless'
 } 
