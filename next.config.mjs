@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-module.exports = {
+const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   output: 'standalone',
@@ -19,4 +19,6 @@ module.exports = {
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs']
   }
-} 
+}
+
+export default nextConfig 

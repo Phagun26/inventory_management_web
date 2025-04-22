@@ -5,6 +5,17 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    'bg-background',
+    'text-foreground',
+    'bg-primary',
+    'bg-primary-hover',
+    'bg-secondary',
+    'bg-secondary-hover',
+    'border-border',
+    'bg-input-background',
+    'text-error'
+  ],
   darkMode: 'class',
   theme: {
     extend: {
