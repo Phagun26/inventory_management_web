@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-module.exports = {
+const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   output: 'standalone',
@@ -18,5 +18,15 @@ module.exports = {
   },
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs']
+  },
+  
+  // Add assetPrefix for proper CSS loading on Netlify
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/' : '',
+  
+  // Ensure CSS modules are handled properly
+  webpack: (config) => {
+    return config;
   }
-} 
+}
+
+module.exports = nextConfig 

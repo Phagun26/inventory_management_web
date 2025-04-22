@@ -5,6 +5,9 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+[[plugins]]
+  package = "./netlify-plugin-nextjs-custom.js"
+
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["@opentelemetry/api"]
@@ -14,11 +17,18 @@
   NEXT_FORCE_EDGE_IMAGES = "true"
   NEXT_TELEMETRY_DISABLED = "1"
 
+# These headers ensure proper CSS loading
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
-    Content-Security-Policy = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: blob:; font-src 'self' data:;"
+    Content-Security-Policy = "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self';"
+
+# Add this to ensure CSS files are served correctly
+[[headers]]
+  for = "/_next/static/css/*"
+  [headers.values]
+    Content-Type = "text/css"
 

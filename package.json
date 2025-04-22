@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "cp -r .next/_next .next/static && cp -r .next/static .next/_next/",
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate --no-engine",
