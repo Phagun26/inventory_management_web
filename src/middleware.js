@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
 
 export function middleware(request) {
-  // Handle static assets
-  const url = request.nextUrl.clone();
-  
-  if (url.pathname.startsWith('/_next/static/css/')) {
-    // Ensure CSS is served with correct headers
+  // For CSS files, set the correct content type
+  if (request.nextUrl.pathname.includes('.css')) {
     const response = NextResponse.next();
     response.headers.set('Content-Type', 'text/css');
     return response;
@@ -15,8 +12,5 @@ export function middleware(request) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-    '/_next/static/css/:path*'
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 }; 

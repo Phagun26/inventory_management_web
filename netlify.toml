@@ -24,7 +24,7 @@
 
 # Add this to ensure CSS files are served correctly
 [[headers]]
-  for = "/_next/static/css/*"
+  for = "/**/*.css"
   [headers.values]
     Content-Type = "text/css"
 

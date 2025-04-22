@@ -1,4 +1,4 @@
-import '../styles/styles.css'
+import '@/app/globals.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import NavbarWrapper from '@/components/NavbarWrapper'
 

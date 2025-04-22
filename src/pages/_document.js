@@ -4,10 +4,7 @@ class MyDocument extends Document {
   render() {
     return (
       <Html lang="en">
-        <Head>
-          {/* Include the stylesheet with a relative path for static export */}
-          <link rel="stylesheet" href="/_next/static/css/styles.css" />
-        </Head>
+        <Head />
         <body>
           <Main />
           <NextScript />
