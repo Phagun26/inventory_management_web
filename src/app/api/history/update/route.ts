@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { randomBytes } from 'crypto'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { type, value } = await request.json()
 
     // Check if the value already exists in the database
@@ -19,6 +26,21 @@ export async function POST(request: Request) {
     })
 
     if (!existingHistory) {
+      // Get default product and rack
+      const defaultProduct = await prisma.product.findFirst({
+        where: { id: 'PROD-LAP001' }
+      })
+      const defaultRack = await prisma.rack.findFirst({
+        where: { id: 'R001' }
+      })
+
+      if (!defaultProduct || !defaultRack) {
+        return NextResponse.json(
+          { error: 'Default product or rack not found' },
+          { status: 500 }
+        )
+      }
+
       // Generate unique ID for operation
       const uniqueId = `op-${Date.now()}-${randomBytes(4).toString('hex')}`
 
@@ -28,9 +50,9 @@ export async function POST(request: Request) {
           id: uniqueId,
           type: 'INWARD', // Default type
           quantity: 0, // Default quantity
-          productId: type === 'item' ? value : '', // Only set if it's an item
-          rackId: type === 'rack' ? value : '', // Only set if it's a rack
-          userId: '1', // Default user ID
+          productId: type === 'item' ? value : defaultProduct.id,
+          rackId: type === 'rack' ? value : defaultRack.id,
+          userId: session.user.id,
           isApproved: false // Default approval status
         }
       })
@@ -39,7 +61,7 @@ export async function POST(request: Request) {
       await prisma.transactionHistory.create({
         data: {
           operationId: operation.id,
-          userId: '1', // Default user ID
+          userId: session.user.id,
           action: 'CREATED',
           notes: `New ${type} added: ${value}`
         }

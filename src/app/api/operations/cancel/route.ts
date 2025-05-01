@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     console.log('Cancelling operation:', operationId)
 
     // Verify user is admin
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { id: userId.toString() }
     })
 
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     // Start a transaction
     const result = await prisma.$transaction(async (tx) => {
       // Find the operation details for history
-      const operation = await tx.operation.findUnique({
+      const operation = await tx.operation.findFirst({
         where: { id: operationId.toString() },
         include: { product: true, rack: true }
       })

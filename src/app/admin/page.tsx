@@ -72,6 +72,11 @@ export default function AdminDashboard() {
   const handleApprove = async (operationIds: number[], notes: string) => {
     try {
       const userData = JSON.parse(localStorage.getItem('user') || '{}')
+      if (!userData.id) {
+        setError('User not authenticated')
+        return
+      }
+
       const response = await fetch('/api/operations/approve', {
         method: 'POST',
         headers: {
@@ -89,7 +94,8 @@ export default function AdminDashboard() {
         fetchPendingOperations()
         setSelectedOperations([])
       } else {
-        setError('Failed to approve operations')
+        const data = await response.json()
+        setError(data.error || 'Failed to approve operations')
       }
     } catch (error) {
       setError('An error occurred while approving operations')

@@ -11,7 +11,7 @@ export async function POST(
     // Use a transaction to ensure all operations are atomic
     const result = await prisma.$transaction(async (tx) => {
       // Get the operation with its pending inventory
-      const operation = await tx.operation.findUnique({
+      const operation = await tx.operation.findFirst({
         where: { id: operationId },
         include: {
           pendingInventory: true,

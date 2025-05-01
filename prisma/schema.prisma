@@ -61,8 +61,8 @@ model Inventory {
   rackId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  rack      Rack     @relation(fields: [rackId], references: [id])
   product   Product  @relation(fields: [productId], references: [id])
+  rack      Rack     @relation(fields: [rackId], references: [id])
 
   @@id([productId, rackId])
 }
@@ -89,9 +89,9 @@ model Operation {
   isCancelled          Boolean              @default(false)
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
+  product              Product              @relation(fields: [productId], references: [id])
   rack                 Rack                 @relation(fields: [rackId], references: [id])
   user                 User                 @relation(fields: [userId], references: [id])
-  product              Product              @relation(fields: [productId], references: [id])
   pendingInventory     PendingInventory[]
   transactionHistories TransactionHistory[]
 }
@@ -105,8 +105,8 @@ model PendingInventory {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   operation   Operation @relation(fields: [operationId], references: [id])
-  rack        Rack      @relation(fields: [rackId], references: [id])
   product     Product   @relation(fields: [productId], references: [id])
+  rack        Rack      @relation(fields: [rackId], references: [id])
 }
 
 model TransactionHistory {
@@ -116,6 +116,6 @@ model TransactionHistory {
   action      String
   timestamp   DateTime  @default(now())
   notes       String?
-  user        User      @relation(fields: [userId], references: [id])
   operation   Operation @relation(fields: [operationId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
 }

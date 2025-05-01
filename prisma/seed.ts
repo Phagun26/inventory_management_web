@@ -1,9 +1,11 @@
 // import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../src/generated/client'
 import { withAccelerate } from '@prisma/extension-accelerate'
 
-const prisma = new PrismaClient().$extends(withAccelerate())
+const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : []
+}).$extends(withAccelerate())
 
 // const prisma = new PrismaClient()
 

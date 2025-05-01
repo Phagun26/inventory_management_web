@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     // Use a transaction to ensure all operations are atomic
     const result = await prisma.$transaction(async (tx) => {
       // Validate user first
-      const user = await tx.user.findUnique({
+      const user = await tx.user.findFirst({
         where: { id: userId }
       })
       if (!user) {
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       // For INWARD operations, handle product and rack creation
       if (type === 'INWARD') {
         // Check and create product if it doesn't exist
-        let product = await tx.product.findUnique({
+        let product = await tx.product.findFirst({
           where: { id: productId }
         })
         
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         }
 
         // Check if rack exists first
-        let rack = await tx.rack.findUnique({
+        let rack = await tx.rack.findFirst({
           where: { id: rackId }
         })
 
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
             })
           } catch (error) {
             // If rack creation fails, check if it was created concurrently
-            rack = await tx.rack.findUnique({
+            rack = await tx.rack.findFirst({
               where: { id: rackId }
             })
             if (!rack) {
@@ -77,8 +77,8 @@ export async function POST(request: Request) {
       } else {
         // For OUTWARD operations
         const [product, rack, inventory] = await Promise.all([
-          tx.product.findUnique({ where: { id: productId } }),
-          tx.rack.findUnique({ where: { id: rackId } }),
+          tx.product.findFirst({ where: { id: productId } }),
+          tx.rack.findFirst({ where: { id: rackId } }),
           tx.inventory.findFirst({
             where: {
               productId,
